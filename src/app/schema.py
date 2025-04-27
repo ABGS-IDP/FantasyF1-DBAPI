@@ -15,12 +15,18 @@ class PyObjectId(ObjectId):
 class User(BaseModel):
     username: str
     email: str
-    password: str  # In real apps, this would be hashed
+    password: str
 
 class Driver(BaseModel):
     name: str
     team: str
     price: float
+    championship_points: Optional[int] = Field(default=0)
+
+class DriverUpdateRequest(BaseModel):
+    team: Optional[str] = None
+    price: Optional[float] = None
+    championship_points: Optional[int] = Field(default=0)
 
 class Team(BaseModel):
     name: str

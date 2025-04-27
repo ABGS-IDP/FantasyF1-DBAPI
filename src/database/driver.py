@@ -12,3 +12,18 @@ class MongoDBClient:
 
     def find_all(self, collection_name: str):
         return list(self.db[collection_name].find())
+
+    def update_one(self, collection_name: str, query: dict, update: dict):
+        result = self.db[collection_name].update_one(query, {"$set": update})
+        return result.modified_count
+
+    def find_one(self, collection_name: str, query: dict):
+        return self.db[collection_name].find_one(query)
+
+    def delete_all_by_query(self, collection_name: str, query: dict):
+        result = self.db[collection_name].delete_many(query)
+        return result.deleted_count
+
+    def delete_all(self, collection_name: str):
+        result = self.db[collection_name].delete_many({})
+        return result.deleted_count

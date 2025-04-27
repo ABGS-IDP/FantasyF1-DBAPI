@@ -1,25 +1,37 @@
 from typing import List
-from .schema import User, Driver, Team, Race, Score
-from fastapi import FastAPI
+from .schema import User, Driver, Team, Race, Score, DriverUpdateRequest
+from fastapi import FastAPI, HTTPException
 from ..database import MongoDBClient
 
 mongo_client = MongoDBClient("mongodb://root:example@localhost:27017/", "fantasyf1")
 
 # FastAPI app
-app = FastAPI()
+app = FastAPI(
+    openapi_tags=[
+        {
+            "name": "FantasyF1",
+            "description": "All Fantasy Formula 1 API endpoints."
+        }
+    ]
+)
 
 # Routes for Users
 @app.post(
     "/users/",
-    response_model=User
+    response_model=User,
+    tags=["Users"]
 )
 async def create_user(user: User):
     user_dict = user.model_dump(by_alias=True)
+    user_dict["roaster"] = []
+    user_dict["total_points"] = 0
+    user_dict["total_budget"] = 15
     return mongo_client.insert_one("users", user_dict)
 
 @app.get(
     "/users/",
-    response_model=List[User]
+    response_model=List[User],
+    tags=["Users"]
 )
 async def list_users():
     return mongo_client.find_all("users")
@@ -27,22 +39,74 @@ async def list_users():
 # Routes for Drivers
 @app.post(
     "/drivers/",
-    response_model=Driver
+    response_model=Driver,
+    tags=["Drivers"]
 )
 async def create_driver(driver: Driver):
+    if mongo_client.find_one("drivers", {"name": driver.name}):
+        raise HTTPException(
+            status_code=409,
+            detail="Driver already exists"
+        )
+
     driver_dict = driver.model_dump(by_alias=True)
+    driver_dict["championship_points"] = 0
     return mongo_client.insert_one("drivers", driver_dict)
+
+@app.put(
+    "/drivers/{driver_name}",
+    response_model=Driver,
+    tags=["Drivers"]
+)
+async def update_driver(driver_name: str, driver: DriverUpdateRequest):
+    driver_dict = driver.model_dump(by_alias=True)
+    cleaned_dict = {k: v for k, v in driver_dict.items() if v is not None}
+    mongo_client.update_one("drivers", {"name": driver_name}, cleaned_dict)
+
+    if driver:= mongo_client.find_one("drivers", {"name": driver_name}):
+        return driver
+    
+    raise HTTPException(
+        status_code=404,
+        detail="Driver not found"
+    )
 
 @app.get(
     "/drivers/",
-    response_model=List[Driver])
+    response_model=List[Driver],
+    tags=["Drivers"]
+)
 async def list_drivers():
     return mongo_client.find_all("drivers")
+
+@app.get(
+    "/drivers/{driver_name}",
+    response_model=Driver,
+    tags=["Drivers"]
+)
+async def list_driver(driver_name: str):
+    return mongo_client.find_one("drivers", {"name": driver_name})
+
+@app.delete(
+    "/drivers/{driver_name}",
+    response_model=Driver,
+    tags=["Drivers"]
+)
+async def delete_driver(driver_name: str):
+    driver = mongo_client.find_one("drivers", {"name": driver_name})
+    if not driver:
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+    mongo_client.delete_all_by_query("drivers", {"name": driver_name})
+    return driver
 
 # Routes for Teams
 @app.post(
     "/teams/",
-    response_model=Team
+    response_model=Team,
+    tags=["Teams"]
 )
 async def create_team(team: Team):
     team_dict = team.model_dump(by_alias=True)
@@ -50,7 +114,8 @@ async def create_team(team: Team):
 
 @app.get(
     "/teams/",
-    response_model=List[Team]
+    response_model=List[Team],
+    tags=["Teams"]
 )
 async def list_teams():
     return mongo_client.find_all("teams")
@@ -58,7 +123,8 @@ async def list_teams():
 # Routes for Races
 @app.post(
     "/races/",
-    response_model=Race
+    response_model=Race,
+    tags=["Races"]
 )
 async def create_race(race: Race):
     race_dict = race.model_dump(by_alias=True)
@@ -66,7 +132,8 @@ async def create_race(race: Race):
 
 @app.get(
     "/races/",
-    response_model=List[Race]
+    response_model=List[Race],
+    tags=["Races"]
 )
 async def list_races():
     return mongo_client.find_all("races")
@@ -74,7 +141,8 @@ async def list_races():
 # Routes for Scores
 @app.post(
     "/scores/",
-    response_model=Score
+    response_model=Score,
+    tags=["Scores"]
 )
 async def create_score(score: Score):
     score_dict = score.model_dump(by_alias=True)
@@ -82,7 +150,8 @@ async def create_score(score: Score):
 
 @app.get(
     "/scores/",
-    response_model=List[Score]
+    response_model=List[Score],
+    tags=["Scores"]
 )
 async def list_scores():
     return mongo_client.find_all("scores")
