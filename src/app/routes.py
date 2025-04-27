@@ -9,7 +9,7 @@ mongo_client = MongoDBClient("mongodb://root:example@localhost:27017/", "fantasy
 app = FastAPI(
     openapi_tags=[
         {
-            "name": "FantasyF1",
+            "name": "FantasyF1-DB",
             "description": "All Fantasy Formula 1 API endpoints."
         }
     ]
