@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, GetCoreSchemaHandler
-from typing import Optional, List
+from typing import Optional
 from bson import ObjectId
 from pydantic_core import core_schema
+from pydantic import EmailStr
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -14,7 +15,7 @@ class PyObjectId(ObjectId):
 
 class User(BaseModel):
     username: str
-    email: str
+    email: EmailStr
     password: str
 
 class Driver(BaseModel):
