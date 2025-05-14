@@ -17,12 +17,19 @@ class User(BaseModel):
     username: str
     email: EmailStr
     password: str
+    drivers: List[str] = Field(default_factory=list)
+    teams: List[str] = Field(default_factory=list)
+    total_points: float = 0.0
+    total_budget: float = 25.0
+    bonuses: dict = Field(default_factory=dict)
 
 class UserStats(BaseModel):
     username: str
-    roaster: List[Any]
-    total_points: int
+    drivers: List[str] = Field(default_factory=list)
+    teams: List[str] = Field(default_factory=list)
+    total_points: float
     total_budget: float
+    bonuses: dict = Field(default_factory=dict)
 
 class Driver(BaseModel):
     name: str
