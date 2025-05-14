@@ -25,9 +25,11 @@ app = FastAPI(
 async def create_user(user: User):
     try:
         user_dict = user.model_dump(by_alias=True)
-        user_dict["roaster"] = []
-        user_dict["total_points"] = 0
-        user_dict["total_budget"] = 15
+        user_dict["drivers"] = []
+        user_dict["teams"] = []
+        user_dict["bonuses"] = {}
+        user_dict["total_points"] = 0.0
+        user_dict["total_budget"] = 25.0
         return mongo_client.insert_one("users", user_dict)
     except DuplicateKeyError as e:
         print(e)
