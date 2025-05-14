@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, GetCoreSchemaHandler
-from typing import Optional
+from typing import Optional, Any, List
 from bson import ObjectId
 from pydantic_core import core_schema
 from pydantic import EmailStr
@@ -17,6 +17,12 @@ class User(BaseModel):
     username: str
     email: EmailStr
     password: str
+
+class UserStats(BaseModel):
+    username: str
+    roaster: List[Any]
+    total_points: int
+    total_budget: float
 
 class Driver(BaseModel):
     name: str
