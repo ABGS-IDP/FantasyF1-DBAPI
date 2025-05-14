@@ -1,5 +1,5 @@
 from typing import List
-from .schema import User, Driver, Team, Race, Score, DriverUpdateRequest
+from .schema import User, Driver, Team, Race, Score, DriverUpdateRequest, UserStats
 from fastapi import FastAPI, HTTPException
 from ..database import MongoDBClient
 from pymongo.errors import DuplicateKeyError
@@ -25,9 +25,11 @@ app = FastAPI(
 async def create_user(user: User):
     try:
         user_dict = user.model_dump(by_alias=True)
-        user_dict["roaster"] = []
-        user_dict["total_points"] = 0
-        user_dict["total_budget"] = 15
+        user_dict["drivers"] = []
+        user_dict["teams"] = []
+        user_dict["bonuses"] = {}
+        user_dict["total_points"] = 0.0
+        user_dict["total_budget"] = 25.0
         return mongo_client.insert_one("users", user_dict)
     except DuplicateKeyError as e:
         print(e)
@@ -39,7 +41,7 @@ async def create_user(user: User):
 
 @app.get(
     "/users/",
-    response_model=List[User],
+    response_model=List[UserStats],
     tags=["Users"]
 )
 async def list_users():
@@ -81,10 +83,30 @@ async def delete_user(username: str):
     return user
 
 
+@app.put(
+    "/users/{username}",
+    response_model=User,
+    tags=["Users"]
+)
+async def update_user(username: str, updated_user: User):
+    user_dict = updated_user.model_dump(by_alias=True)
+    cleaned_dict = {k: v for k, v in user_dict.items() if v is not None}
+    mongo_client.update_one("users", {"username": username}, cleaned_dict)
+
+    if user := mongo_client.find_one("users", {"username": username}):
+        return user
+    
+    raise HTTPException(
+        status_code=404,
+        detail="User not found"
+    )
+
+
 # Routes for Drivers
 @app.post(
     "/drivers/",
     response_model=Driver,
+    status_code=201,
     tags=["Drivers"]
 )
 async def create_driver(driver: Driver):
@@ -139,24 +161,23 @@ async def list_driver(driver_name: str):
 
 @app.delete(
     "/drivers/{driver_name}",
-    response_model=Driver,
+    status_code=204,
     tags=["Drivers"]
 )
 async def delete_driver(driver_name: str):
-    driver = mongo_client.find_one("drivers", {"name": driver_name})
-    if not driver:
+    if mongo_client.delete("drivers", {"name": driver_name}) == 0:
         raise HTTPException(
             status_code=404,
             detail="Driver not found"
         )
-    mongo_client.delete("drivers", {"name": driver_name})
-    return driver
+    
 
 
 # Routes for Teams
 @app.post(
     "/teams/",
     response_model=Team,
+    status_code=201,
     tags=["Teams"]
 )
 async def create_team(team: Team):
@@ -172,6 +193,19 @@ async def create_team(team: Team):
 async def list_teams():
     return mongo_client.find("teams")
 
+
+@app.delete(
+    "/teams/{team_name}",
+    status_code=204,
+    tags=["Teams"]
+)
+async def delete_team(team_name: str):
+    if mongo_client.delete("teams", {"name": team_name}) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Team not found"
+        )
+    
 
 # Routes for Races
 @app.post(
@@ -192,6 +226,19 @@ async def create_race(race: Race):
 async def list_races():
     return mongo_client.find("races")
 
+
+@app.delete(
+    "/races/{race_id}",
+    status_code=204,
+    tags=["Teams"]
+)
+async def delete_team(race_id: str):
+    if mongo_client.delete("races", {"name": race_id}) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Race not found"
+        )
+    
 
 # Routes for Scores
 @app.post(
