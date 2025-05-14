@@ -83,6 +83,25 @@ async def delete_user(username: str):
     return user
 
 
+@app.put(
+    "/users/{username}",
+    response_model=User,
+    tags=["Users"]
+)
+async def update_user(username: str, updated_user: User):
+    user_dict = updated_user.model_dump(by_alias=True)
+    cleaned_dict = {k: v for k, v in user_dict.items() if v is not None}
+    mongo_client.update_one("users", {"username": username}, cleaned_dict)
+
+    if user := mongo_client.find_one("users", {"username": username}):
+        return user
+    
+    raise HTTPException(
+        status_code=404,
+        detail="User not found"
+    )
+
+
 # Routes for Drivers
 @app.post(
     "/drivers/",
