@@ -14,16 +14,11 @@ class PyObjectId(ObjectId):
             serialization=core_schema.plain_serializer_function_ser_schema(str)
         )
 
-
 class User(BaseModel):
     username: str
     email: EmailStr
     password: str
-    drivers: List[str] = Field(default_factory=list)
-    teams: List[str] = Field(default_factory=list)
-    total_points: float = 0.0
-    total_budget: float = 25.0
-    bonuses: dict = Field(default_factory=dict)
+    role: Optional[str] = Field(default="player")
 
 
 class UserStats(BaseModel):

@@ -49,6 +49,19 @@ async def list_users():
 
 
 @app.get(
+    "/users/{username}/password"
+)
+async def get_user_password(username: str):
+    user = mongo_client.find_one("users", {"username": username})
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    return {"password": user["password"], "role": user["role"]}
+
+
+@app.get(
     "/users/{username}",
     response_model=UserStats,
     tags=["Users"]
