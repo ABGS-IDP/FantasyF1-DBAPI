@@ -170,7 +170,7 @@ async def delete_driver(driver_name: str):
             status_code=404,
             detail="Driver not found"
         )
-    
+
 
 
 # Routes for Teams
@@ -181,8 +181,15 @@ async def delete_driver(driver_name: str):
     tags=["Teams"]
 )
 async def create_team(team: Team):
-    team_dict = team.model_dump(by_alias=True)
-    return mongo_client.insert_one("teams", team_dict)
+    try:
+        team_dict = team.model_dump(by_alias=True)
+        return mongo_client.insert_one("teams", team_dict)
+    except DuplicateKeyError as e:
+        print(e)
+        raise HTTPException(
+            status_code=409,
+            detail="Team already exists"
+        )
 
 
 @app.get(
@@ -230,7 +237,7 @@ async def list_races():
 @app.delete(
     "/races/{race_id}",
     status_code=204,
-    tags=["Teams"]
+    tags=["Races"]
 )
 async def delete_team(race_id: str):
     if mongo_client.delete("races", {"name": race_id}) == 0:

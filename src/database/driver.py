@@ -5,10 +5,12 @@ class MongoDBClient:
     def __init__(self, uri: str, db_name: str):
         self.client = MongoClient(uri)
         self.db = self.client[db_name]
+
         self.db.users.create_index([("username", ASCENDING)], unique=True)
         self.db.users.create_index([("email", ASCENDING)], unique=True)
         self.db.drivers.create_index([("name", ASCENDING)], unique=True)
         self.db.drivers.create_index([("team", ASCENDING)])
+        self.db.teams.create_index([("name", ASCENDING)], unique=True)
 
 
     def insert_one(self, collection_name: str, document: dict):
