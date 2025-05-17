@@ -50,7 +50,7 @@ async def list_users():
 
 @app.get(
     "/users/{username}",
-    response_model=User,
+    response_model=UserStats,
     tags=["Users"]
 )
 async def list_user(username: str):
@@ -60,12 +60,12 @@ async def list_user(username: str):
             status_code=404,
             detail="User not found"
         )
-    return user
+    return UserStats.model_validate(user)
 
 
 @app.delete(
     "/users/{username}",
-    response_model=User,
+    response_model=UserStats,
     tags=["Users"]
 )
 async def delete_user(username: str):
@@ -85,10 +85,10 @@ async def delete_user(username: str):
 
 @app.put(
     "/users/{username}",
-    response_model=User,
+    response_model=UserStats,
     tags=["Users"]
 )
-async def update_user(username: str, updated_user: User):
+async def update_user(username: str, updated_user: UserStats):
     user_dict = updated_user.model_dump(by_alias=True)
     cleaned_dict = {k: v for k, v in user_dict.items() if v is not None}
     mongo_client.update_one("users", {"username": username}, cleaned_dict)
@@ -218,6 +218,7 @@ async def delete_team(team_name: str):
 @app.post(
     "/races/",
     response_model=Race,
+    status_code=201,
     tags=["Races"]
 )
 async def create_race(race: Race):
