@@ -3,8 +3,12 @@ from .schema import User, Driver, Team, Race, Score, DriverUpdateRequest, UserSt
 from fastapi import FastAPI, HTTPException
 from ..database import MongoDBClient
 from pymongo.errors import DuplicateKeyError
+import os
 
-mongo_client = MongoDBClient("mongodb://root:example@localhost:27017/", "fantasyf1")
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+
+mongo_client = MongoDBClient(MONGO_URI, MONGO_DB)
 
 # FastAPI app
 app = FastAPI(
